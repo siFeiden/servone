@@ -4,9 +4,9 @@
 :- initialization(main).
 
 
-http_status(200, 'OK').
-http_status(302, 'Found').
-http_status(500, 'Internal Server Error').
+http_status(200, "OK").
+http_status(302, "Found").
+http_status(500, "Internal Server Error").
 
 
 main :-
@@ -57,14 +57,14 @@ parse_request(_, _) :- throw(http_error(500, [])).
 
 
 make_request_answer(Path, ServedFile, Answer) :-
-  format(string(Path), '/~s', ServedFile),
+  format(string(Path), "/~s", ServedFile),
   !,
   setup_call_cleanup(
     open(ServedFile, read, FileIn),
     (
       read_string(FileIn, Length, FileContent),
       make_http200_headers(Length, Headers),
-      format(string(Answer), '~s\r\n~s\r\n\r\n', [Headers, FileContent])
+      format(string(Answer), "~s\r\n~s\r\n\r\n", [Headers, FileContent])
     ),
     close(FileIn)
   ).
@@ -81,7 +81,7 @@ make_http200_headers(Length, Headers) :-
 
 make_full_http_header(Code, Headers, Answer) :-
   http_status(Code, Message),
-  format(string(Answer), 'HTTP/1.1 ~d ~s\r\n~s', [Code, Message, Headers]).
+  format(string(Answer), "HTTP/1.1 ~d ~s\r\n~s", [Code, Message, Headers]).
 
 send_http_error(Out, Code, MoreHeaders) :-
   headers_string(MoreHeaders, S),
