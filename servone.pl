@@ -78,44 +78,19 @@ make_request_answer(_, ServedFile, Answer) :-
 
 
 make_http200_headers(Length, Headers) :-
-  H = [
-    h('Connection', "Close"),
-    h('Content-Type', "text/plain"),
-    h('Content-Length', Length)
-  ],
-  make_http_header(200, H, Headers).
-
+  format(string(H), "Connection: Close\r\nContent-Type: text/plain\r\nContent-Length: ~d\r\n", Length),
+  make_full_http_header(200, H, Headers).
 
 make_http302_headers(Location, Length, Headers) :-
-  format(string(RootLoc), '/~s', Location),
-  H = [
-    h('Connection', "Close"),
-    h('Content-Type', "text/plain"),
-    h('Content-Length', Length),
-    h('Location', RootLoc)
-  ],
-  make_http_header(302, H, Headers).
+  format(string(H), "Connection: Close\r\nContent-Type: text/plain\r\nContent-Length: ~d\r\nLocation: /~s\r\n", [Length, Location]),
+  make_full_http_header(302, H, Headers).
 
 
-make_http_header(Code, HeadersList, Header) :-
+make_full_http_header(Code, Headers, Answer) :-
   http_status(Code, Message),
-  concat_headers(HeadersList, Concat),
-  format(string(Header), 'HTTP/1.1 ~d ~s\r\n~s', [Code, Message, Concat]).
-
-
-concat_headers([], '').
-concat_headers([h(K, V)| Headers], C) :-
-  string(V),
-  !,
-  concat_headers(Headers, Rest),
-  format(string(C), '~s: ~s\r\n~s', [K, V, Rest]).
-
-concat_headers([h(K, V)| Headers], C) :-
-  concat_headers(Headers, Rest),
-  format(string(C), '~s: ~d\r\n~s', [K, V, Rest]).
-
+  format(string(Answer), 'HTTP/1.1 ~d ~s\r\n~s', [Code, Message, Headers]).
 
 send_500(Out) :-
-  make_http_header(500, [], Headers),
+  make_full_http_header(500, "", Headers),
   write(Out, Headers).
 
