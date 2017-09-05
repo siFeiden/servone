@@ -6,6 +6,8 @@
 
 http_status(200, "OK").
 http_status(302, "Found").
+http_status(400, "Bad Request").
+http_status(405, "Method Not Allowed").
 http_status(500, "Internal Server Error").
 
 
@@ -52,8 +54,24 @@ parse_request(In, Path) :-
   read_line_to_codes(In, RequestCodes),
   string_codes(Request, RequestCodes),
   writeln(Request),
-  split_string(Request, " ", " ", ["GET", Path, "HTTP/1.1"]).
-parse_request(_, _) :- throw(http_error(500, [])).
+  phrase(http(Method, PathCodes), RequestCodes),
+  string_codes(Path, PathCodes),
+  method_allowed(Method).
+parse_request(_, _) :- throw(http_error(400, [])).
+
+method_allowed(M) :- string_codes("GET", M), !.
+method_allowed(_) :- throw(http_error(405, [])).
+
+http(M, P) --> method(M), " ", path(P), " ", type.
+
+method(M) --> word(M).
+path(P) --> word(P).
+
+word([W| WS]) --> [W], { \+ code_type(W, white) }, word(WS).
+word([]) --> [].
+
+type --> "HTTP/1.0".
+type --> "HTTP/1.1".
 
 
 make_request_answer(Path, ServedFile, Answer) :-
